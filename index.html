@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareView — AI Health Monitoring Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-bg: #ffffff;
+      --color-bg-secondary: #f5f5f3;
+      --color-text-primary: #1a1a18;
+      --color-text-secondary: #6b6b67;
+      --color-border: rgba(0,0,0,0.12);
+      --color-border-secondary: rgba(0,0,0,0.22);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #1a1a18;
+        --color-bg-secondary: #242422;
+        --color-text-primary: #f0efe8;
+        --color-text-secondary: #9a9993;
+        --color-border: rgba(255,255,255,0.12);
+        --color-border-secondary: rgba(255,255,255,0.22);
+      }
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-bg-secondary);
+      color: var(--color-text-primary);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .dash { max-width: 1100px; margin: 0 auto; }
+
+    /* Topbar */
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+    .topbar-left { display: flex; align-items: center; gap: 10px; }
+    .topbar-left h1 { font-size: 20px; font-weight: 500; }
+    .topbar-left span { font-size: 13px; color: var(--color-text-secondary); }
+    .badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+    .badge-ai { background: #EEEDFE; color: #3C3489; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: #E6F1FB; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: #185FA5; }
+
+    /* Metric cards */
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+    .metric-card { background: var(--color-bg); border-radius: var(--radius-md); padding: 14px 16px; border: 0.5px solid var(--color-border); }
+    .metric-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+    .metric-value { font-size: 22px; font-weight: 500; }
+    .metric-sub { font-size: 11px; margin-top: 3px; }
+    .up { color: #0F6E56; } .down { color: #A32D2D; } .warn { color: #854F0B; }
+
+    /* Main layout */
+    .main { display: grid; grid-template-columns: 240px minmax(0, 1fr) 220px; gap: 12px; align-items: start; }
+
+    /* Patient list */
+    .section-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 6px; }
+    .patient-list { display: flex; flex-direction: column; gap: 8px; }
+    .patient-card { background: var(--color-bg); border: 0.5px solid var(--color-border); border-radius: var(--radius-lg); padding: 12px; cursor: pointer; transition: border-color 0.15s; }
+    .patient-card:hover { border-color: var(--color-border-secondary); }
+    .patient-card.active { border: 1.5px solid #534AB7; }
+    .patient-name { font-size: 14px; font-weight: 500; }
+    .patient-meta { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+    .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; }
+    .dot-alert { background: #E24B4A; } .dot-stable { background: #1D9E75; } .dot-warn { background: #EF9F27; }
+
+    /* Cards */
+    .detail-panel { display: flex; flex-direction: column; gap: 12px; }
+    .card { background: var(--color-bg); border: 0.5px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px; }
+    .card-title { font-size: 13px; font-weight: 500; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+
+    /* Vitals */
+    .vitals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .vital-item { background: var(--color-bg-secondary); border-radius: var(--radius-md); padding: 10px 12px; }
+    .vital-name { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 3px; }
+    .vital-val { font-size: 17px; font-weight: 500; }
+    .vital-unit { font-size: 11px; color: var(--color-text-secondary); font-weight: 400; }
+    .vital-trend { font-size: 11px; margin-top: 2px; }
+    .sparkline { width: 100%; height: 50px; margin-top: 8px; }
+
+    /* Timeline */
+    .timeline { list-style: none; }
+    .tl-item { display: flex; gap: 10px; margin-bottom: 10px; font-size: 12px; }
+    .tl-time { color: var(--color-text-secondary); min-width: 44px; }
+    .tl-dot-col { display: flex; flex-direction: column; align-items: center; }
+    .tl-dot { width: 8px; height: 8px; border-radius: 50%; background: #534AB7; margin-top: 3px; flex-shrink: 0; }
+    .tl-line { width: 1px; background: var(--color-border); flex: 1; margin-top: 3px; }
+    .tl-text { color: var(--color-text-secondary); line-height: 1.5; }
+    .tl-text strong { color: var(--color-text-primary); font-weight: 500; }
+
+    /* AI panel */
+    .ai-panel { display: flex; flex-direction: column; gap: 10px; }
+    .ai-card { background: var(--color-bg); border: 0.5px solid var(--color-border); border-radius: var(--radius-lg); padding: 14px; }
+    .ai-header { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; margin-bottom: 10px; }
+    .ai-badge { background: #EEEDFE; color: #3C3489; font-size: 10px; padding: 2px 7px; border-radius: 12px; font-weight: 500; }
+    .insight { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
+    .insight-icon { width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; }
+    .insight-icon.alert { background: #FCEBEB; color: #A32D2D; }
+    .insight-icon.info { background: #E1F5EE; color: #0F6E56; }
+    .insight-icon.warn { background: #FAEEDA; color: #854F0B; }
+    .insight-text { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+    .insight-text strong { color: var(--color-text-primary); font-weight: 500; }
+    .care-rec { background: #EEEDFE; border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 8px; }
+    .care-rec-title { font-size: 12px; font-weight: 500; color: #3C3489; margin-bottom: 2px; }
+    .care-rec-body { font-size: 11px; color: #534AB7; line-height: 1.5; }
+    .action-btn { width: 100%; padding: 8px; font-size: 12px; border-radius: var(--radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .action-btn:hover { background: var(--color-bg-secondary); }
+
+    @media (max-width: 768px) {
+      .main { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+<div class="dash">
+  <div class="topbar">
+    <div class="topbar-left">
+      <i class="ti ti-activity-heartbeat" style="font-size:22px; color:#534AB7;"></i>
+      <div>
+        <h1>CareView <span class="badge badge-ai">AI</span></h1>
+        <span>Monday, June 16 · Ward 3B</span>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button class="action-btn" style="width:auto; padding:7px 14px;">
+        <i class="ti ti-plus"></i> Add patient
+      </button>
+      <div class="avatar">RN</div>
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric-card">
+      <div class="metric-label"><i class="ti ti-users"></i> Patients</div>
+      <div class="metric-value">12</div>
+      <div class="metric-sub up"><i class="ti ti-arrow-up" style="font-size:10px;"></i> 2 new today</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label"><i class="ti ti-alert-triangle"></i> Alerts</div>
+      <div class="metric-value">3</div>
+      <div class="metric-sub down">2 critical, 1 moderate</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label"><i class="ti ti-stethoscope"></i> Pending reviews</div>
+      <div class="metric-value">5</div>
+      <div class="metric-sub warn">AI flagged for follow-up</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label"><i class="ti ti-check"></i> Stable</div>
+      <div class="metric-value">9</div>
+      <div class="metric-sub up">75% of ward</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="patient-list">
+      <div class="section-label">Patients</div>
+      <div class="patient-card active">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="patient-name"><span class="status-dot dot-alert"></span>Eleanor Voss</div>
+            <div class="patient-meta">72 · Room 304 · CHF</div>
+          </div>
+          <span class="badge" style="background:#FCEBEB;color:#A32D2D;">Critical</span>
+        </div>
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px;">Last vitals: 8 min ago</div>
+      </div>
+      <div class="patient-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="patient-name"><span class="status-dot dot-warn"></span>Marcus Leung</div>
+            <div class="patient-meta">58 · Room 307 · T2D</div>
+          </div>
+          <span class="badge" style="background:#FAEEDA;color:#854F0B;">Watch</span>
+        </div>
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px;">Last vitals: 21 min ago</div>
+      </div>
+      <div class="patient-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="patient-name"><span class="status-dot dot-stable"></span>Priya Nair</div>
+            <div class="patient-meta">45 · Room 310 · Post-op</div>
+          </div>
+          <span class="badge" style="background:#E1F5EE;color:#0F6E56;">Stable</span>
+        </div>
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px;">Last vitals: 34 min ago</div>
+      </div>
+      <div class="patient-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="patient-name"><span class="status-dot dot-stable"></span>James Okafor</div>
+            <div class="patient-meta">61 · Room 312 · Pneumonia</div>
+          </div>
+          <span class="badge" style="background:#E1F5EE;color:#0F6E56;">Stable</span>
+        </div>
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px;">Last vitals: 1 hr ago</div>
+      </div>
+    </div>
+
+    <div class="detail-panel">
+      <div class="card">
+        <div class="card-title">
+          <i class="ti ti-activity-heartbeat"></i>
+          Eleanor Voss — live vitals
+          <span style="margin-left:auto;font-size:11px;color:var(--color-text-secondary);">Updated 8 min ago</span>
+        </div>
+        <div class="vitals-grid">
+          <div class="vital-item" style="border-left:3px solid #E24B4A;border-radius:0 var(--radius-md) var(--radius-md) 0;">
+            <div class="vital-name">Heart rate</div>
+            <div class="vital-val">112 <span class="vital-unit">bpm</span></div>
+            <div class="vital-trend down"><i class="ti ti-arrow-up" style="font-size:10px;"></i> High — was 88 yesterday</div>
+          </div>
+          <div class="vital-item">
+            <div class="vital-name">Blood pressure</div>
+            <div class="vital-val">158<span class="vital-unit">/94</span></div>
+            <div class="vital-trend warn">Elevated</div>
+          </div>
+          <div class="vital-item">
+            <div class="vital-name">O₂ saturation</div>
+            <div class="vital-val">91 <span class="vital-unit">%</span></div>
+            <div class="vital-trend down"><i class="ti ti-arrow-down" style="font-size:10px;"></i> Below 95% threshold</div>
+          </div>
+          <div class="vital-item">
+            <div class="vital-name">Temperature</div>
+            <div class="vital-val">37.8 <span class="vital-unit">°C</span></div>
+            <div class="vital-trend warn">Low-grade fever</div>
+          </div>
+        </div>
+        <svg class="sparkline" viewBox="0 0 400 50" preserveAspectRatio="none" aria-label="Heart rate trend over 6 hours" role="img">
+          <polyline points="0,38 60,35 120,32 180,28 240,22 300,18 400,8" fill="none" stroke="#534AB7" stroke-width="1.5" stroke-linejoin="round"/>
+          <polyline points="0,38 60,35 120,32 180,28 240,22 300,18 400,8 400,50 0,50" fill="#EEEDFE" stroke="none"/>
+          <text x="2" y="48" font-size="9" fill="#888780">6h ago</text>
+          <text x="358" y="48" font-size="9" fill="#888780">now</text>
+          <text x="2" y="10" font-size="9" fill="#534AB7">HR trend ↑</text>
+        </svg>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i class="ti ti-clock-hour-4"></i> Today's events</div>
+        <ul class="timeline">
+          <li class="tl-item">
+            <span class="tl-time">09:14</span>
+            <div class="tl-dot-col"><div class="tl-dot" style="background:#E24B4A;"></div><div class="tl-line"></div></div>
+            <span class="tl-text"><strong>O₂ sat dropped to 89%</strong> — nurse alerted, repositioned patient</span>
+          </li>
+          <li class="tl-item">
+            <span class="tl-time">08:40</span>
+            <div class="tl-dot-col"><div class="tl-dot"></div><div class="tl-line"></div></div>
+            <span class="tl-text">Furosemide 40mg administered</span>
+          </li>
+          <li class="tl-item">
+            <span class="tl-time">07:55</span>
+            <div class="tl-dot-col"><div class="tl-dot" style="background:#EF9F27;"></div><div class="tl-line"></div></div>
+            <span class="tl-text"><strong>AI flagged</strong> elevated resting HR overnight</span>
+          </li>
+          <li class="tl-item">
+            <span class="tl-time">07:00</span>
+            <div class="tl-dot-col"><div class="tl-dot" style="background:#1D9E75;"></div></div>
+            <span class="tl-text">Morning check — BP 152/90, vitals logged</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ai-panel">
+      <div class="ai-card">
+        <div class="ai-header"><i class="ti ti-brain"></i> AI insights <span class="ai-badge">Live</span></div>
+        <div class="insight">
+          <div class="insight-icon alert"><i class="ti ti-alert-circle"></i></div>
+          <div class="insight-text"><strong>Possible CHF exacerbation.</strong> HR + O₂ pattern matches 78% of prior decompensation events in this patient's history.</div>
+        </div>
+        <div class="insight">
+          <div class="insight-icon warn"><i class="ti ti-droplet"></i></div>
+          <div class="insight-text"><strong>Fluid retention risk.</strong> Weight up 1.4 kg in 48h. Consider diuretic review.</div>
+        </div>
+        <div class="insight">
+          <div class="insight-icon info"><i class="ti ti-pill"></i></div>
+          <div class="insight-text">Furosemide dose given 3h ago — allow time for response before escalating.</div>
+        </div>
+      </div>
+
+      <div class="ai-card">
+        <div class="ai-header"><i class="ti ti-clipboard-list"></i> Care recommendations</div>
+        <div class="care-rec">
+          <div class="care-rec-title">Prioritize O₂ monitoring</div>
+          <div class="care-rec-body">Check sat every 15 min. If below 90%, escalate to physician immediately.</div>
+        </div>
+        <div class="care-rec" style="background:#E1F5EE;">
+          <div class="care-rec-title" style="color:#085041;">Family communication</div>
+          <div class="care-rec-body" style="color:#0F6E56;">Consider notifying family of change in status. Patient listed 2 contacts.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
