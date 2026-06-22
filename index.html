@@ -3,474 +3,496 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CareView — Health & Wellbeing Dashboard</title>
+  <title>CareView — Wellbeing Dashboard</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #f7f6f3; --card: #ffffff; --text: #1a1a18; --muted: #6b6b67;
-      --border: rgba(0,0,0,0.09); --border2: rgba(0,0,0,0.18);
-      --radius-md: 10px; --radius-lg: 14px; --radius-xl: 20px;
+      --bg: #f4f3f0; --card: #ffffff; --text: #181816; --muted: #6b6b67;
+      --soft: #eeecea; --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.16);
+      --purple: #534AB7; --purple-light: #EEEDFE; --purple-mid: #AFA9EC;
+      --green: #1D9E75; --green-light: #E1F5EE;
+      --amber: #BA7517; --amber-light: #FAEEDA;
+      --red: #A32D2D; --red-light: #FCEBEB;
+      --r-md: 10px; --r-lg: 14px; --r-xl: 20px;
       --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     }
     @media (prefers-color-scheme: dark) {
-      :root { --bg: #1a1a18; --card: #242422; --text: #f0efe8; --muted: #9a9993; --border: rgba(255,255,255,0.09); --border2: rgba(255,255,255,0.18); }
+      :root {
+        --bg: #181816; --card: #222220; --text: #eeecea; --muted: #8a8a86;
+        --soft: #2a2a28; --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.16);
+      }
     }
-    body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; padding: 20px; }
-    .wrap { max-width: 1120px; margin: 0 auto; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    /* Topbar */
-    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-    .logo { display: flex; align-items: center; gap: 9px; }
-    .logo h1 { font-size: 19px; font-weight: 500; }
-    .logo sub { font-size: 12px; color: var(--muted); font-weight: 400; display: block; margin-top: 1px; }
+    /* Layout */
+    .shell { display: grid; grid-template-columns: 72px 220px 1fr; min-height: 100vh; }
+
+    /* Icon nav sidebar */
+    .sidenav { background: var(--card); border-right: 0.5px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 6px; }
+    .sidenav-logo { width: 38px; height: 38px; background: var(--purple); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .sidenav-logo i { font-size: 20px; color: #fff; }
+    .nav-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); font-size: 20px; }
+    .nav-icon:hover { background: var(--soft); }
+    .nav-icon.active { background: var(--purple-light); color: var(--purple); }
+    .nav-spacer { flex: 1; }
+
+    /* Patient list panel */
+    .patient-panel { background: var(--card); border-right: 0.5px solid var(--border); display: flex; flex-direction: column; }
+    .panel-header { padding: 20px 16px 14px; border-bottom: 0.5px solid var(--border); }
+    .panel-title { font-size: 13px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+    .search-box { display: flex; align-items: center; gap: 6px; background: var(--soft); border-radius: 8px; padding: 7px 10px; font-size: 13px; color: var(--muted); }
+
+    .pt-list { padding: 10px 10px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+    .pt-item { padding: 11px 12px; border-radius: var(--r-md); cursor: pointer; border: 1px solid transparent; transition: all 0.12s; }
+    .pt-item:hover { background: var(--soft); }
+    .pt-item.active { background: var(--purple-light); border-color: var(--purple-mid); }
+    .pt-row1 { display: flex; align-items: center; gap: 9px; margin-bottom: 5px; }
+    .pt-av { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; }
+    .pt-name { font-size: 14px; font-weight: 500; flex: 1; }
+    .status-pip { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .pt-meta { font-size: 11px; color: var(--muted); padding-left: 43px; }
 
     /* View toggle */
-    .view-toggle { display: flex; background: var(--card); border: 0.5px solid var(--border2); border-radius: 99px; padding: 3px; gap: 2px; }
-    .vt-btn { padding: 6px 16px; border-radius: 99px; border: none; font-size: 13px; cursor: pointer; background: transparent; color: var(--muted); font-family: var(--font); transition: all 0.15s; }
-    .vt-btn.active { background: #534AB7; color: #fff; }
+    .view-bar { display: flex; align-items: center; gap: 6px; padding: 16px 20px; border-bottom: 0.5px solid var(--border); }
+    .vt { padding: 6px 14px; border-radius: 99px; font-size: 13px; cursor: pointer; border: 0.5px solid transparent; background: transparent; color: var(--muted); font-family: var(--font); transition: all 0.12s; }
+    .vt.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+    .view-sub { font-size: 12px; color: var(--muted); margin-left: auto; }
 
-    /* Patient pill row */
-    .patient-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-    .ppill { display: flex; align-items: center; gap: 9px; padding: 10px 16px; background: var(--card); border: 0.5px solid var(--border); border-radius: 99px; cursor: pointer; transition: all 0.15s; }
-    .ppill.active { border: 1.5px solid #534AB7; }
-    .ppill-av { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; }
-    .ppill-name { font-size: 14px; font-weight: 500; }
-    .ppill-status { font-size: 11px; }
-
-    /* Main grid */
-    .grid { display: grid; gap: 12px; }
-    .grid-2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
-    .grid-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
-    .grid-4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
+    /* Main content */
+    .main { overflow-y: auto; }
+    .content { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
 
     /* Cards */
-    .card { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 18px; }
-    .card-sm { padding: 14px 16px; }
-    .card-title { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+    .card { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--r-lg); }
+    .card-p { padding: 18px 20px; }
+    .clabel { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; display: flex; align-items: center; gap: 5px; }
 
-    /* Hero card */
-    .hero { border-radius: var(--radius-xl); padding: 22px 24px; }
-    .hero-top { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
-    .hero-av { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 500; flex-shrink: 0; }
-    .hero-name { font-size: 22px; font-weight: 500; }
-    .hero-sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
-    .hero-mood { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 13px; padding: 5px 12px; border-radius: 99px; }
-    .overall-label { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
-    .overall-val { font-size: 28px; font-weight: 500; }
-    .overall-desc { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+    /* Hero */
+    .hero-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .hero-card { border-radius: var(--r-xl); padding: 22px 24px; }
+    .hc-top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .hc-av { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 500; flex-shrink: 0; }
+    .hc-name { font-size: 20px; font-weight: 500; }
+    .hc-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .hc-score-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .hc-score { font-size: 32px; font-weight: 500; letter-spacing: -1px; }
+    .hc-desc { font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.6; }
 
     /* Wellbeing bars */
-    .wb-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 13px; }
-    .wb-label { width: 90px; color: var(--muted); flex-shrink: 0; }
-    .wb-bar-wrap { flex: 1; height: 7px; background: var(--bg); border-radius: 99px; overflow: hidden; }
-    .wb-bar { height: 100%; border-radius: 99px; }
-    .wb-val { font-size: 12px; font-weight: 500; min-width: 28px; text-align: right; }
+    .wb { display: flex; flex-direction: column; gap: 11px; }
+    .wb-row { display: flex; align-items: center; gap: 10px; }
+    .wb-label { font-size: 12px; color: var(--muted); width: 80px; flex-shrink: 0; }
+    .wb-track { flex: 1; height: 6px; background: var(--soft); border-radius: 99px; overflow: hidden; }
+    .wb-fill { height: 100%; border-radius: 99px; }
+    .wb-num { font-size: 12px; font-weight: 500; width: 28px; text-align: right; }
 
-    /* Activity feed */
-    .activity-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid var(--border); align-items: flex-start; }
-    .activity-item:last-child { border-bottom: none; padding-bottom: 0; }
-    .act-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-    .act-text { flex: 1; }
+    /* Stat row */
+    .stat-row { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+    .stat { border-radius: var(--r-md); padding: 14px 16px; }
+    .stat-val { font-size: 22px; font-weight: 500; margin-bottom: 3px; }
+    .stat-label { font-size: 11px; opacity: .75; }
+    .stat-icon { font-size: 18px; margin-bottom: 8px; }
+
+    /* Activity */
+    .act-list { display: flex; flex-direction: column; }
+    .act-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 0.5px solid var(--border); }
+    .act-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .act-ic { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+    .act-body { flex: 1; }
     .act-title { font-size: 13px; font-weight: 500; }
     .act-sub { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
-    .act-time { font-size: 11px; color: var(--muted); white-space: nowrap; }
-
-    /* Stat tiles */
-    .stat { border-radius: var(--radius-md); padding: 14px; }
-    .stat-icon { font-size: 20px; margin-bottom: 8px; }
-    .stat-val { font-size: 20px; font-weight: 500; }
-    .stat-label { font-size: 12px; margin-top: 3px; opacity: .75; }
-
-    /* AI summary box */
-    .ai-box { border-radius: var(--radius-lg); padding: 16px 18px; }
-    .ai-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 99px; margin-bottom: 10px; }
-    .ai-text { font-size: 14px; line-height: 1.7; }
-    .ai-text p { margin-bottom: 8px; }
-    .ai-text p:last-child { margin-bottom: 0; }
+    .act-time { font-size: 11px; color: var(--muted); white-space: nowrap; padding-top: 2px; }
 
     /* Alerts */
-    .alert-item { display: flex; gap: 10px; align-items: flex-start; padding: 11px 13px; border-radius: var(--radius-md); margin-bottom: 8px; }
-    .alert-item:last-child { margin-bottom: 0; }
-    .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-    .alert-title { font-size: 13px; font-weight: 500; }
-    .alert-body { font-size: 12px; margin-top: 2px; line-height: 1.5; opacity: .85; }
+    .alert-list { display: flex; flex-direction: column; gap: 8px; }
+    .al { border-radius: var(--r-md); padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start; }
+    .al-ic { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+    .al-title { font-size: 13px; font-weight: 500; }
+    .al-body { font-size: 12px; margin-top: 2px; line-height: 1.5; opacity: .8; }
 
-    /* Family view specific */
-    .fam-feeling { text-align: center; padding: 24px; }
-    .fam-emoji { font-size: 52px; line-height: 1; margin-bottom: 10px; }
-    .fam-status-text { font-size: 20px; font-weight: 500; margin-bottom: 6px; }
-    .fam-status-sub { font-size: 14px; color: var(--muted); line-height: 1.6; }
+    /* AI note */
+    .ai-note { border-left: 3px solid var(--purple); border-radius: 0 var(--r-md) var(--r-md) 0; padding: 14px 16px; background: var(--purple-light); }
+    .ai-note-tag { font-size: 11px; font-weight: 500; color: var(--purple); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+    .ai-note-text { font-size: 13px; color: #3C3489; line-height: 1.7; }
 
-    .update-card { border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 10px; }
-    .update-card:last-child { margin-bottom: 0; }
-    .update-icon-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 14px; font-weight: 500; }
-    .update-body { font-size: 13px; line-height: 1.65; }
+    /* Family view */
+    .fam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .fam-hero { padding: 28px 24px; text-align: center; border-radius: var(--r-xl); }
+    .fam-status { font-size: 28px; font-weight: 500; margin-bottom: 6px; }
+    .fam-tagline { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 280px; margin: 0 auto; }
+    .fam-score-row { display: flex; justify-content: center; gap: 24px; margin-top: 20px; }
+    .fam-score-item { text-align: center; }
+    .fam-score-val { font-size: 22px; font-weight: 500; }
+    .fam-score-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-    .contact-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
-    .contact-row:last-child { border-bottom: none; }
-    .contact-av { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; background: #E6F1FB; color: #185FA5; }
-    .contact-name { font-size: 14px; font-weight: 500; }
-    .contact-rel { font-size: 12px; color: var(--muted); }
-    .contact-btn { margin-left: auto; font-size: 12px; padding: 5px 12px; border-radius: 99px; border: 0.5px solid var(--border2); background: transparent; cursor: pointer; color: var(--text); }
+    .update-list { display: flex; flex-direction: column; gap: 9px; }
+    .upd { border-radius: var(--r-md); padding: 13px 15px; }
+    .upd-title { font-size: 13px; font-weight: 500; margin-bottom: 3px; display: flex; align-items: center; gap: 7px; }
+    .upd-body { font-size: 12px; line-height: 1.6; opacity: .85; }
+
+    .contact-list { display: flex; flex-direction: column; }
+    .ct-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 0.5px solid var(--border); }
+    .ct-row:last-child { border-bottom: none; }
+    .ct-av { width: 34px; height: 34px; border-radius: 50%; background: var(--purple-light); color: var(--purple); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; }
+    .ct-name { font-size: 13px; font-weight: 500; }
+    .ct-rel { font-size: 11px; color: var(--muted); }
+    .ct-btn { margin-left: auto; font-size: 11px; padding: 4px 12px; border-radius: 99px; border: 0.5px solid var(--border2); background: transparent; cursor: pointer; color: var(--muted); font-family: var(--font); }
+    .ct-btn:hover { background: var(--soft); }
 
     .hidden { display: none !important; }
-
-    @media (max-width: 780px) {
-      .grid-3, .grid-4 { grid-template-columns: repeat(2,1fr); }
-      .grid-2 { grid-template-columns: 1fr; }
-    }
   </style>
 </head>
 <body>
-<div class="wrap">
+<div class="shell">
 
-  <div class="topbar">
-    <div class="logo">
-      <i class="ti ti-heart-handshake" style="font-size:24px;color:#534AB7;"></i>
-      <div>
-        <h1>CareView</h1>
-        <sub>Wellbeing & care dashboard</sub>
-      </div>
+  <!-- Icon nav -->
+  <nav class="sidenav">
+    <div class="sidenav-logo"><i class="ti ti-heart-handshake"></i></div>
+    <div class="nav-icon active"><i class="ti ti-layout-dashboard"></i></div>
+    <div class="nav-icon"><i class="ti ti-users"></i></div>
+    <div class="nav-icon"><i class="ti ti-calendar"></i></div>
+    <div class="nav-icon"><i class="ti ti-bell"></i></div>
+    <div class="nav-spacer"></div>
+    <div class="nav-icon"><i class="ti ti-settings"></i></div>
+    <div class="nav-icon" style="margin-top:4px;">
+      <div style="width:30px;height:30px;border-radius:50%;background:var(--purple-light);color:var(--purple);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;">RN</div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <div class="view-toggle">
-        <button class="vt-btn active" onclick="setView('caregiver')"><i class="ti ti-stethoscope" style="font-size:13px;margin-right:4px;"></i>Caregiver</button>
-        <button class="vt-btn" onclick="setView('family')"><i class="ti ti-heart" style="font-size:13px;margin-right:4px;"></i>Family view</button>
-      </div>
+  </nav>
+
+  <!-- Patient list -->
+  <aside class="patient-panel">
+    <div class="panel-header">
+      <div class="panel-title">Patients</div>
+      <div class="search-box"><i class="ti ti-search" style="font-size:14px;"></i> Search</div>
     </div>
+    <div class="pt-list" id="pt-list"></div>
+  </aside>
+
+  <!-- Main area -->
+  <div class="main">
+    <div class="view-bar">
+      <button class="vt active" onclick="setView('caregiver', this)">Caregiver view</button>
+      <button class="vt" onclick="setView('family', this)">Family view</button>
+      <span class="view-sub" id="view-sub"></span>
+    </div>
+    <div class="content" id="content"></div>
   </div>
-
-  <div class="patient-row" id="patient-row"></div>
-
-  <div id="caregiver-view"></div>
-  <div id="family-view" class="hidden"></div>
 
 </div>
 
 <script>
 const people = [
   {
-    id: 0,
-    name: "Eleanor Voss",
-    initials: "EV",
-    age: 72,
-    pronoun: "She",
-    room: "Room 304",
-    avatarBg: "#FAEEDA", avatarColor: "#854F0B",
-    pillStatus: "Needs attention",
-    pillStatusColor: "#A32D2D",
-    overallScore: 58,
-    overallLabel: "Fair",
-    overallColor: "#EF9F27",
-    overallDesc: "Eleanor is having a harder day. Her breathing feels more labored than usual and she's moving around less. She's been resting most of the morning.",
-    mood: { emoji: "😔", label: "Feeling tired and a bit down", bg: "#FAEEDA", color: "#854F0B" },
+    id: 0, name: "Eleanor Voss", initials: "EV", age: 72, room: "Room 304",
+    avBg: "#FAEEDA", avColor: "#854F0B",
+    pipColor: "#E24B4A", statusLabel: "Needs attention",
+    score: 58, scoreColor: "#BA7517", scoreLabel: "Fair",
+    tagline: "Resting comfortably. Breathing requires closer monitoring today.",
     wellbeing: [
-      { label: "Comfort",   val: 55, color: "#EF9F27" },
-      { label: "Energy",    val: 30, color: "#E24B4A" },
-      { label: "Sleep",     val: 60, color: "#EF9F27" },
-      { label: "Appetite",  val: 40, color: "#E24B4A" },
-      { label: "Social",    val: 65, color: "#1D9E75" },
+      { l: "Comfort",  v: 55, c: "#BA7517" },
+      { l: "Energy",   v: 30, c: "#A32D2D" },
+      { l: "Sleep",    v: 60, c: "#BA7517" },
+      { l: "Appetite", v: 40, c: "#A32D2D" },
+      { l: "Social",   v: 65, c: "#1D9E75" },
     ],
     stats: [
-      { icon: "ti-moon", val: "5.2h", label: "Sleep last night", bg: "#FAEEDA", color: "#854F0B" },
-      { icon: "ti-footprint", val: "312", label: "Steps today", bg: "#FCEBEB", color: "#A32D2D" },
-      { icon: "ti-bowl-spoon", val: "40%", label: "Meal finished", bg: "#FCEBEB", color: "#A32D2D" },
-      { icon: "ti-droplet", val: "3 cups", label: "Fluids today", bg: "#FAEEDA", color: "#854F0B" },
+      { icon: "ti-moon",      val: "5.2h",  label: "Sleep",         bg: "#FAEEDA", c: "#854F0B" },
+      { icon: "ti-footprint", val: "312",   label: "Steps today",   bg: "#FCEBEB", c: "#A32D2D" },
+      { icon: "ti-bowl-spoon",val: "40%",   label: "Meal finished", bg: "#FCEBEB", c: "#A32D2D" },
+      { icon: "ti-droplet",   val: "3 cups",label: "Fluids today",  bg: "#FAEEDA", c: "#854F0B" },
     ],
     activities: [
-      { icon: "ti-armchair", iconBg: "#EEEDFE", iconColor: "#534AB7", title: "Resting in chair", sub: "Has been sitting up since 9am — a good sign compared to yesterday.", time: "Now" },
-      { icon: "ti-friends", iconBg: "#E1F5EE", iconColor: "#0F6E56", title: "Family visit", sub: "Son David visited for 45 minutes. Eleanor was talkative and smiled several times.", time: "10:30am" },
-      { icon: "ti-bowl-spoon", iconBg: "#FAEEDA", iconColor: "#854F0B", title: "Breakfast — partial", sub: "Ate about half her oatmeal. Said she wasn't very hungry. Drank some orange juice.", time: "8:15am" },
-      { icon: "ti-moon", iconBg: "#E6F1FB", iconColor: "#185FA5", title: "Restless sleep", sub: "Woke up twice overnight. Said she felt short of breath around 3am.", time: "Last night" },
+      { icon: "ti-armchair",  iBg: "#EEEDFE", iC: "#534AB7", title: "Resting in chair",  sub: "Sitting up since 9am — an improvement over yesterday.", time: "Now" },
+      { icon: "ti-friends",   iBg: "#E1F5EE", iC: "#0F6E56", title: "Family visit",       sub: "Son David visited for 45 min. Eleanor was talkative and engaged.", time: "10:30am" },
+      { icon: "ti-bowl-spoon",iBg: "#FAEEDA", iC: "#854F0B", title: "Breakfast — partial",sub: "Ate half her oatmeal. Drank orange juice.", time: "8:15am" },
+      { icon: "ti-moon",      iBg: "#E6F1FB", iC: "#185FA5", title: "Restless overnight", sub: "Woke twice. Reported shortness of breath around 3am.", time: "Last night" },
     ],
-    cgAlerts: [
-      { type: "warn", bg: "#FAEEDA", color: "#854F0B", icon: "ti-lungs", title: "Breathing more labored", body: "O₂ slightly lower than her usual baseline. Worth monitoring more frequently today." },
-      { type: "info", bg: "#EEEDFE", color: "#534AB7", icon: "ti-droplet", title: "Fluid intake low", body: "Only 3 cups today — her target is 6. Encourage small sips throughout the afternoon." },
-      { type: "info", bg: "#E1F5EE", color: "#0F6E56", icon: "ti-mood-smile", title: "Improved mood after visit", body: "Mood score jumped after David's visit. Social connection is clearly meaningful for her." },
+    alerts: [
+      { bg: "#FAEEDA", c: "#854F0B", icon: "ti-lungs",       title: "Breathing more labored", body: "O₂ slightly below her baseline. Increase monitoring frequency this afternoon." },
+      { bg: "#FCEBEB", c: "#A32D2D", icon: "ti-droplet",     title: "Fluid intake low",       body: "3 of 6 cup target reached. Encourage small sips during rounds." },
+      { bg: "#E1F5EE", c: "#0F6E56", icon: "ti-mood-smile",  title: "Mood improved after visit", body: "Noticeable lift in affect following David's visit. Social connection is a meaningful factor for her." },
     ],
-    aiCaregiver: "Eleanor is having a more difficult day than yesterday. Her energy and appetite are low, and she slept poorly overnight. However, her mood improved noticeably after her son's visit this morning — social connection seems to matter a lot to her.\n\nHer fluid intake needs attention. She tends to forget to drink unless reminded, so gentle check-ins around fluids during afternoon rounds would help.\n\nOverall she is stable, but watch for further changes in breathing comfort — if she seems more breathless by evening, escalate to the care team.",
-    familyStatus: "having a harder day than usual",
-    familyEmoji: "😔",
-    familyHeadline: "Eleanor is resting and being closely cared for",
-    familyUpdates: [
-      { icon: "ti-heart", bg: "#E1F5EE", color: "#0F6E56", title: "She's comfortable", body: "Eleanor is resting in her chair and being closely watched by her care team today. She's not in pain." },
-      { icon: "ti-moon", bg: "#FAEEDA", color: "#854F0B", title: "She didn't sleep great", body: "She woke up a couple of times last night feeling a little short of breath. The team knows and is keeping an eye on it." },
-      { icon: "ti-bowl-spoon", bg: "#FAEEDA", color: "#854F0B", title: "Eating less than usual", body: "She only ate about half her breakfast. This sometimes happens on harder days — the team is encouraging her to stay hydrated." },
-      { icon: "ti-friends", bg: "#EEEDFE", color: "#534AB7", title: "David's visit brightened her day", body: "She was noticeably happier after David came by this morning. Visits mean a lot to her right now." },
+    aiNote: "Eleanor is having a harder day. Energy and appetite are low and sleep was poor overnight. Her mood lifted after her son's visit — social connection is a consistent positive for her. Fluid intake needs attention this afternoon. Breathing comfort should be monitored closely; escalate if there is further decline by evening.",
+    famStatus: "Resting and being closely cared for",
+    famTagline: "Her care team is watching her closely today and keeping her comfortable.",
+    famScore: [
+      { val: "Mild", label: "Discomfort" },
+      { val: "Low", label: "Energy" },
+      { val: "Fair", label: "Overall" },
+    ],
+    famUpdates: [
+      { icon: "ti-heart",      bg: "#E1F5EE", c: "#0F6E56", title: "She is comfortable",      body: "Eleanor is resting in her chair and not in pain. The team is with her." },
+      { icon: "ti-moon",       bg: "#FAEEDA", c: "#854F0B", title: "Sleep was interrupted",   body: "She woke a couple of times overnight feeling short of breath. The care team is aware and monitoring." },
+      { icon: "ti-bowl-spoon", bg: "#FAEEDA", c: "#854F0B", title: "Eating less than usual",  body: "She ate about half her breakfast. The team is encouraging fluids throughout the day." },
+      { icon: "ti-friends",    bg: "#EEEDFE", c: "#534AB7", title: "David's visit helped",    body: "She was noticeably brighter after he came by this morning. Visits make a real difference." },
     ],
     contacts: [
-      { initials: "DV", name: "David Voss", rel: "Son (primary contact)" },
-      { initials: "SW", name: "Sandra Wheeler", rel: "Daughter" },
+      { ini: "DV", name: "David Voss",     rel: "Son · Primary contact" },
+      { ini: "SW", name: "Sandra Wheeler", rel: "Daughter" },
     ],
+    famNote: "Eleanor is having a harder day than usual, but she is stable and comfortable. Her care team is monitoring her breathing closely. The best thing family can do right now is visit — it genuinely lifts her spirits.",
   },
   {
-    id: 1,
-    name: "Marcus Leung",
-    initials: "ML",
-    age: 58,
-    pronoun: "He",
-    room: "Room 307",
-    avatarBg: "#E6F1FB", avatarColor: "#185FA5",
-    pillStatus: "Keep an eye on",
-    pillStatusColor: "#854F0B",
-    overallScore: 68,
-    overallLabel: "Moderate",
-    overallColor: "#EF9F27",
-    overallDesc: "Marcus is in decent spirits but his energy is uneven today. He walked around the ward this morning which is great progress. His blood sugar has been harder to manage than usual.",
-    mood: { emoji: "😐", label: "Okay — a bit frustrated with his diet", bg: "#E6F1FB", color: "#185FA5" },
+    id: 1, name: "Marcus Leung", initials: "ML", age: 58, room: "Room 307",
+    avBg: "#E6F1FB", avColor: "#185FA5",
+    pipColor: "#EF9F27", statusLabel: "Keep an eye on",
+    score: 68, scoreColor: "#BA7517", scoreLabel: "Moderate",
+    tagline: "In decent spirits. Walking more today — good progress.",
     wellbeing: [
-      { label: "Comfort",   val: 72, color: "#1D9E75" },
-      { label: "Energy",    val: 60, color: "#EF9F27" },
-      { label: "Sleep",     val: 75, color: "#1D9E75" },
-      { label: "Appetite",  val: 55, color: "#EF9F27" },
-      { label: "Social",    val: 70, color: "#1D9E75" },
+      { l: "Comfort",  v: 72, c: "#1D9E75" },
+      { l: "Energy",   v: 60, c: "#BA7517" },
+      { l: "Sleep",    v: 75, c: "#1D9E75" },
+      { l: "Appetite", v: 55, c: "#BA7517" },
+      { l: "Social",   v: 70, c: "#1D9E75" },
     ],
     stats: [
-      { icon: "ti-moon",       val: "7h",   label: "Sleep last night",  bg: "#E1F5EE", color: "#0F6E56" },
-      { icon: "ti-footprint",  val: "1,240", label: "Steps today",       bg: "#E1F5EE", color: "#0F6E56" },
-      { icon: "ti-bowl-spoon", val: "70%",  label: "Meal finished",     bg: "#FAEEDA", color: "#854F0B" },
-      { icon: "ti-droplet",    val: "5 cups", label: "Fluids today",    bg: "#FAEEDA", color: "#854F0B" },
+      { icon: "ti-moon",       val: "7h",    label: "Sleep",         bg: "#E1F5EE", c: "#0F6E56" },
+      { icon: "ti-footprint",  val: "1,240", label: "Steps today",   bg: "#E1F5EE", c: "#0F6E56" },
+      { icon: "ti-bowl-spoon", val: "70%",   label: "Meal finished", bg: "#FAEEDA", c: "#854F0B" },
+      { icon: "ti-droplet",    val: "5 cups",label: "Fluids today",  bg: "#FAEEDA", c: "#854F0B" },
     ],
     activities: [
-      { icon: "ti-walk", iconBg: "#E1F5EE", iconColor: "#0F6E56", title: "Walked the ward hallway", sub: "Two laps this morning — he said it felt good. Best physical activity since admission.", time: "9:45am" },
-      { icon: "ti-friends", iconBg: "#EEEDFE", iconColor: "#534AB7", title: "Call with wife Amy", sub: "30-minute video call. She's planning to visit tomorrow afternoon.", time: "11:00am" },
-      { icon: "ti-book", iconBg: "#E6F1FB", iconColor: "#185FA5", title: "Reading in his room", sub: "Spent time reading after lunch — relaxed and calm.", time: "1:30pm" },
-      { icon: "ti-bowl-spoon", iconBg: "#FAEEDA", iconColor: "#854F0B", title: "Lunch — moderate", sub: "Ate most of his meal but skipped dessert. Engaged with the dietitian about food choices.", time: "12:30pm" },
+      { icon: "ti-walk",       iBg: "#E1F5EE", iC: "#0F6E56", title: "Walked the ward",    sub: "Two laps this morning — most physical activity since admission.", time: "9:45am" },
+      { icon: "ti-phone",      iBg: "#EEEDFE", iC: "#534AB7", title: "Video call with Amy", sub: "30-min call with his wife. She is visiting tomorrow afternoon.", time: "11:00am" },
+      { icon: "ti-book",       iBg: "#E6F1FB", iC: "#185FA5", title: "Reading after lunch", sub: "Relaxed and calm in his room.", time: "1:30pm" },
+      { icon: "ti-bowl-spoon", iBg: "#FAEEDA", iC: "#854F0B", title: "Lunch — moderate",    sub: "Engaged with the dietitian about food choices.", time: "12:30pm" },
     ],
-    cgAlerts: [
-      { type: "warn", bg: "#FAEEDA", color: "#854F0B", icon: "ti-chart-line", title: "Blood sugar harder to manage", body: "Levels have been higher than his target range. The team is reviewing his plan — this is being actively managed." },
-      { type: "info", bg: "#E1F5EE", color: "#0F6E56", icon: "ti-walk", title: "Great movement progress", body: "Walking today is the most activity Marcus has done since admission. Encourage this — it genuinely helps." },
-      { type: "info", bg: "#EEEDFE", color: "#534AB7", icon: "ti-mood-smile", title: "Motivated to improve diet", body: "He had a good conversation with the dietitian today and seemed genuinely engaged. Build on this momentum." },
+    alerts: [
+      { bg: "#FAEEDA", c: "#854F0B", icon: "ti-chart-line", title: "Blood sugar above target", body: "Levels have been higher than his range. Team is actively reviewing the plan." },
+      { bg: "#E1F5EE", c: "#0F6E56", icon: "ti-walk",       title: "Walking is great progress", body: "Most movement since admission. Encourage this — it supports his recovery." },
+      { bg: "#EEEDFE", c: "#534AB7", icon: "ti-users",      title: "Amy visiting tomorrow",    body: "His mood and motivation typically improve with her presence. Note in handoff." },
     ],
-    aiCaregiver: "Marcus is making real progress — the walking today is significant and his mood is generally positive. His main frustration right now is around diet restrictions, which is common for patients managing diabetes for the first time in a hospital setting.\n\nHis blood sugar management needs attention, but he's engaged and motivated. The dietitian visit today was productive. Wife Amy is visiting tomorrow — this will likely have a positive effect on his mood and motivation.\n\nEncourage continued movement and fluid intake. He responds well to positive reinforcement.",
-    familyStatus: "doing okay and making progress",
-    familyEmoji: "🙂",
-    familyHeadline: "Marcus had a good morning — he's moving more",
-    familyUpdates: [
-      { icon: "ti-walk", bg: "#E1F5EE", color: "#0F6E56", title: "He walked today", body: "Marcus walked up and down the ward hallway this morning — the most he's moved since coming in. The care team is really pleased." },
-      { icon: "ti-moon", bg: "#E1F5EE", color: "#0F6E56", title: "Slept well last night", body: "He got about 7 hours and woke up feeling more rested than the previous days." },
-      { icon: "ti-bowl-spoon", bg: "#FAEEDA", color: "#854F0B", title: "Working on his diet", body: "He's been learning about what foods work best for him. Today he had a great chat with a nutrition specialist." },
-      { icon: "ti-chart-line", bg: "#FAEEDA", color: "#854F0B", title: "Blood sugar still being adjusted", body: "His numbers are a bit higher than the team would like, but they're on it and adjusting his care plan. Nothing to worry about right now." },
+    aiNote: "Marcus is making real progress. Walking today is significant and his mood is positive. Main frustration is around diet restrictions — common in new hospital settings. Blood sugar needs attention but he is motivated and engaged. Amy's visit tomorrow will help. Encourage movement and build on today's dietitian conversation.",
+    famStatus: "Making good progress today",
+    famTagline: "He's more active than he's been since he arrived.",
+    famScore: [
+      { val: "Good", label: "Sleep" },
+      { val: "Active", label: "Movement" },
+      { val: "Moderate", label: "Overall" },
+    ],
+    famUpdates: [
+      { icon: "ti-walk",       bg: "#E1F5EE", c: "#0F6E56", title: "He walked today",           body: "Marcus walked around the ward this morning — the most movement he's had since coming in. The team is really pleased." },
+      { icon: "ti-moon",       bg: "#E1F5EE", c: "#0F6E56", title: "Good night's sleep",        body: "He slept about 7 hours and woke up more rested than the previous days." },
+      { icon: "ti-bowl-spoon", bg: "#FAEEDA", c: "#854F0B", title: "Learning about his diet",   body: "He had a good session with a nutrition specialist today. He's engaged and motivated to make changes." },
+      { icon: "ti-chart-line", bg: "#FAEEDA", c: "#854F0B", title: "Blood sugar being adjusted",body: "His numbers are a bit high, but the team is actively managing it. Nothing urgent." },
     ],
     contacts: [
-      { initials: "AL", name: "Amy Leung", rel: "Wife (primary contact)" },
-      { initials: "KL", name: "Kevin Leung", rel: "Brother" },
+      { ini: "AL", name: "Amy Leung",   rel: "Wife · Primary contact" },
+      { ini: "KL", name: "Kevin Leung", rel: "Brother" },
     ],
+    famNote: "Marcus is in good spirits and making steady progress. His care team is working with him on managing his blood sugar. Amy's visit tomorrow is already something he's looking forward to.",
   },
   {
-    id: 2,
-    name: "Priya Nair",
-    initials: "PN",
-    age: 45,
-    pronoun: "She",
-    room: "Room 310",
-    avatarBg: "#E1F5EE", avatarColor: "#0F6E56",
-    pillStatus: "Doing well",
-    pillStatusColor: "#0F6E56",
-    overallScore: 82,
-    overallLabel: "Good",
-    overallColor: "#1D9E75",
-    overallDesc: "Priya is recovering well. She's up and walking, managing her pain with oral medication, and is in good spirits. She's already thinking about going home.",
-    mood: { emoji: "😊", label: "Positive — ready to get home", bg: "#E1F5EE", color: "#0F6E56" },
+    id: 2, name: "Priya Nair", initials: "PN", age: 45, room: "Room 310",
+    avBg: "#E1F5EE", avColor: "#0F6E56",
+    pipColor: "#1D9E75", statusLabel: "Doing well",
+    score: 82, scoreColor: "#1D9E75", scoreLabel: "Good",
+    tagline: "Recovering well. Independent, eating well, and in great spirits.",
     wellbeing: [
-      { label: "Comfort",   val: 80, color: "#1D9E75" },
-      { label: "Energy",    val: 70, color: "#1D9E75" },
-      { label: "Sleep",     val: 78, color: "#1D9E75" },
-      { label: "Appetite",  val: 82, color: "#1D9E75" },
-      { label: "Social",    val: 88, color: "#1D9E75" },
+      { l: "Comfort",  v: 80, c: "#1D9E75" },
+      { l: "Energy",   v: 70, c: "#1D9E75" },
+      { l: "Sleep",    v: 78, c: "#1D9E75" },
+      { l: "Appetite", v: 82, c: "#1D9E75" },
+      { l: "Social",   v: 88, c: "#1D9E75" },
     ],
     stats: [
-      { icon: "ti-moon",       val: "7.5h", label: "Sleep last night",  bg: "#E1F5EE", color: "#0F6E56" },
-      { icon: "ti-footprint",  val: "1,820", label: "Steps today",      bg: "#E1F5EE", color: "#0F6E56" },
-      { icon: "ti-bowl-spoon", val: "90%",  label: "Meal finished",     bg: "#E1F5EE", color: "#0F6E56" },
-      { icon: "ti-heart",      val: "3/10",  label: "Pain level",        bg: "#E1F5EE", color: "#0F6E56" },
+      { icon: "ti-moon",       val: "7.5h",  label: "Sleep",         bg: "#E1F5EE", c: "#0F6E56" },
+      { icon: "ti-footprint",  val: "1,820", label: "Steps today",   bg: "#E1F5EE", c: "#0F6E56" },
+      { icon: "ti-bowl-spoon", val: "90%",   label: "Meal finished", bg: "#E1F5EE", c: "#0F6E56" },
+      { icon: "ti-heart",      val: "3/10",  label: "Pain level",    bg: "#E1F5EE", c: "#0F6E56" },
     ],
     activities: [
-      { icon: "ti-walk", iconBg: "#E1F5EE", iconColor: "#0F6E56", title: "Walking independently", sub: "Three short walks today. She's moving around without help and says it feels good to be up.", time: "Throughout day" },
-      { icon: "ti-bowl-spoon", iconBg: "#E1F5EE", iconColor: "#0F6E56", title: "Ate a full lunch", sub: "Had most of her meal and asked for extra fruit. Appetite returning to normal.", time: "12:45pm" },
-      { icon: "ti-phone", iconBg: "#EEEDFE", iconColor: "#534AB7", title: "Called her kids", sub: "Had a video call with her two children. Laughed a lot and looked genuinely happy.", time: "2:00pm" },
-      { icon: "ti-moon", iconBg: "#E1F5EE", iconColor: "#0F6E56", title: "Good sleep", sub: "Slept most of the night with only minor discomfort. Best sleep since her surgery.", time: "Last night" },
+      { icon: "ti-walk",       iBg: "#E1F5EE", iC: "#0F6E56", title: "Walking independently",sub: "Three walks today. Moving without assistance.", time: "Throughout" },
+      { icon: "ti-bowl-spoon", iBg: "#E1F5EE", iC: "#0F6E56", title: "Full lunch",           sub: "Finished her meal and asked for extra fruit.", time: "12:45pm" },
+      { icon: "ti-phone",      iBg: "#EEEDFE", iC: "#534AB7", title: "Called her kids",      sub: "Video call — laughed a lot and seemed genuinely happy.", time: "2:00pm" },
+      { icon: "ti-moon",       iBg: "#E1F5EE", iC: "#0F6E56", title: "Solid sleep",          sub: "Best night since surgery. Minor discomfort only.", time: "Last night" },
     ],
-    cgAlerts: [
-      { type: "good", bg: "#E1F5EE", color: "#0F6E56", icon: "ti-check", title: "On track for discharge tomorrow", body: "Priya is progressing well. If today continues like this, she can likely go home tomorrow morning." },
-      { type: "info", bg: "#EEEDFE", color: "#534AB7", icon: "ti-home", title: "Prepare home care instructions", body: "Review wound care, activity restrictions, and follow-up appointment before discharge." },
+    alerts: [
+      { bg: "#E1F5EE", c: "#0F6E56", icon: "ti-check",      title: "On track for discharge tomorrow", body: "Progressing well on all markers. Prepare discharge instructions." },
+      { bg: "#EEEDFE", c: "#534AB7", icon: "ti-home",        title: "Home care review needed",         body: "Go over wound care, activity limits, and follow-up with Dr. Chen Wei before she leaves." },
     ],
-    aiCaregiver: "Priya is recovering excellently. Her pain is well-controlled, she's eating well, walking independently, and her mood is very positive. She's motivated and engaged in her own recovery.\n\nMain focus now is discharge planning — make sure she and her husband Ravi understand wound care, what to watch for at home, and when to follow up with Dr. Chen Wei.\n\nNo concerns at this time. This is a smooth recovery.",
-    familyStatus: "recovering really well",
-    familyEmoji: "😊",
-    familyHeadline: "Priya is doing great — almost ready to come home",
-    familyUpdates: [
-      { icon: "ti-walk", bg: "#E1F5EE", color: "#0F6E56", title: "She's up and walking", body: "Priya has been walking around on her own today — three times already. She's getting stronger by the hour." },
-      { icon: "ti-bowl-spoon", bg: "#E1F5EE", color: "#0F6E56", title: "Eating well", body: "She finished almost all of her lunch and asked for more fruit. Her appetite is almost back to normal." },
-      { icon: "ti-home", bg: "#EEEDFE", color: "#534AB7", title: "Might be home tomorrow", body: "If she keeps progressing like this, the care team thinks she could be discharged tomorrow morning. We'll confirm in the evening." },
-      { icon: "ti-heart", bg: "#E1F5EE", color: "#0F6E56", title: "Pain is manageable", body: "She rates her pain at about 3 out of 10 — mild and controlled with regular oral medication. She's comfortable." },
+    aiNote: "Priya is recovering excellently. Pain controlled, eating well, walking independently, mood very positive. She is engaged in her own recovery and asking the right questions. Focus now is discharge planning — ensure she and Ravi understand wound care and when to follow up. No clinical concerns.",
+    famStatus: "Recovering really well",
+    famTagline: "She's close to coming home.",
+    famScore: [
+      { val: "Mild", label: "Pain" },
+      { val: "Strong", label: "Appetite" },
+      { val: "Good", label: "Overall" },
+    ],
+    famUpdates: [
+      { icon: "ti-walk",       bg: "#E1F5EE", c: "#0F6E56", title: "Up and walking on her own", body: "Three walks today — she's moving around without any help and says it feels good." },
+      { icon: "ti-bowl-spoon", bg: "#E1F5EE", c: "#0F6E56", title: "Eating well again",         body: "She finished her lunch and asked for more. Her appetite is almost back to normal." },
+      { icon: "ti-home",       bg: "#EEEDFE", c: "#534AB7", title: "Possible discharge tomorrow",body: "If she keeps progressing like today, the team expects she can go home tomorrow morning." },
+      { icon: "ti-heart",      bg: "#E1F5EE", c: "#0F6E56", title: "Pain well managed",         body: "She rates her pain at 3 out of 10. Comfortable and in good spirits." },
     ],
     contacts: [
-      { initials: "RN", name: "Ravi Nair", rel: "Husband (primary contact)" },
-      { initials: "MN", name: "Maya Nair", rel: "Sister" },
+      { ini: "RN", name: "Ravi Nair", rel: "Husband · Primary contact" },
+      { ini: "MN", name: "Maya Nair", rel: "Sister" },
     ],
+    famNote: "Priya is doing great and the team is proud of her progress. She's been asking about going home — and that may well happen tomorrow. We'll confirm this evening once the care team has done their final assessment.",
   },
   {
-    id: 3,
-    name: "James Okafor",
-    initials: "JO",
-    age: 61,
-    pronoun: "He",
-    room: "Room 312",
-    avatarBg: "#E1F5EE", avatarColor: "#0F6E56",
-    pillStatus: "Improving",
-    pillStatusColor: "#0F6E56",
-    overallScore: 74,
-    overallLabel: "Good",
-    overallColor: "#1D9E75",
-    overallDesc: "James is steadily improving. His breathing is much better than when he arrived. He's been more talkative and engaged today, which is a great sign.",
-    mood: { emoji: "🙂", label: "Feeling better — cautiously optimistic", bg: "#E1F5EE", color: "#0F6E56" },
+    id: 3, name: "James Okafor", initials: "JO", age: 61, room: "Room 312",
+    avBg: "#E1F5EE", avColor: "#0F6E56",
+    pipColor: "#1D9E75", statusLabel: "Improving",
+    score: 74, scoreColor: "#1D9E75", scoreLabel: "Good",
+    tagline: "Breathing noticeably better. More talkative and engaged today.",
     wellbeing: [
-      { label: "Comfort",   val: 74, color: "#1D9E75" },
-      { label: "Energy",    val: 65, color: "#EF9F27" },
-      { label: "Sleep",     val: 70, color: "#1D9E75" },
-      { label: "Appetite",  val: 68, color: "#EF9F27" },
-      { label: "Social",    val: 80, color: "#1D9E75" },
+      { l: "Comfort",  v: 74, c: "#1D9E75" },
+      { l: "Energy",   v: 65, c: "#BA7517" },
+      { l: "Sleep",    v: 70, c: "#1D9E75" },
+      { l: "Appetite", v: 68, c: "#BA7517" },
+      { l: "Social",   v: 80, c: "#1D9E75" },
     ],
     stats: [
-      { icon: "ti-moon",       val: "6.5h", label: "Sleep last night",  bg: "#E1F5EE", color: "#0F6E56" },
-      { icon: "ti-footprint",  val: "890",  label: "Steps today",       bg: "#FAEEDA", color: "#854F0B" },
-      { icon: "ti-bowl-spoon", val: "75%",  label: "Meal finished",     bg: "#E1F5EE", color: "#0F6E56" },
-      { icon: "ti-wind",       val: "Easier", label: "Breathing today", bg: "#E1F5EE", color: "#0F6E56" },
+      { icon: "ti-moon",       val: "6.5h",   label: "Sleep",         bg: "#E1F5EE", c: "#0F6E56" },
+      { icon: "ti-footprint",  val: "890",    label: "Steps today",   bg: "#FAEEDA", c: "#854F0B" },
+      { icon: "ti-bowl-spoon", val: "75%",    label: "Meal finished", bg: "#E1F5EE", c: "#0F6E56" },
+      { icon: "ti-wind",       val: "Room air",label: "Breathing",    bg: "#E1F5EE", c: "#0F6E56" },
     ],
     activities: [
-      { icon: "ti-wind", iconBg: "#E1F5EE", iconColor: "#0F6E56", title: "Breathing without extra oxygen", sub: "Off supplemental oxygen since this morning — breathing on his own now. A big milestone.", time: "Since 8am" },
-      { icon: "ti-friends", iconBg: "#EEEDFE", iconColor: "#534AB7", title: "Wife Ngozi visited", sub: "She brought food from home. James ate more than he has all week and seemed very cheered up.", time: "2:00pm" },
-      { icon: "ti-tv", iconBg: "#E6F1FB", iconColor: "#185FA5", title: "Watched football highlights", sub: "Relaxed and in good spirits in the afternoon. Chatting more with the nursing staff.", time: "3:30pm" },
-      { icon: "ti-moon", iconBg: "#E1F5EE", iconColor: "#0F6E56", title: "Better sleep than previous nights", sub: "Less coughing overnight. Said he felt the most rested he has since being admitted.", time: "Last night" },
+      { icon: "ti-wind",    iBg: "#E1F5EE", iC: "#0F6E56", title: "Off supplemental oxygen",  sub: "Breathing independently since 8am — a major milestone.", time: "Since 8am" },
+      { icon: "ti-friends", iBg: "#EEEDFE", iC: "#534AB7", title: "Ngozi visited",             sub: "She brought food from home. James ate more than he has all week.", time: "2:00pm" },
+      { icon: "ti-tv",      iBg: "#E6F1FB", iC: "#185FA5", title: "Relaxed afternoon",         sub: "Watching TV, chatting with staff. Good spirits.", time: "3:30pm" },
+      { icon: "ti-moon",    iBg: "#E1F5EE", iC: "#0F6E56", title: "Best sleep since admission",sub: "Less coughing. Said he felt most rested since arriving.", time: "Last night" },
     ],
-    cgAlerts: [
-      { type: "good", bg: "#E1F5EE", color: "#0F6E56", icon: "ti-lungs", title: "Off supplemental oxygen", body: "Breathing independently since morning — this is a meaningful recovery milestone for James." },
-      { type: "info", bg: "#EEEDFE", color: "#534AB7", icon: "ti-stethoscope", title: "Lung follow-up recommended", body: "James has mild COPD. Plan a pulmonology referral before discharge to support his long-term breathing health." },
+    alerts: [
+      { bg: "#E1F5EE", c: "#0F6E56", icon: "ti-lungs",      title: "Off oxygen — a key milestone", body: "Breathing independently since morning. Continue monitoring at current frequency." },
+      { bg: "#EEEDFE", c: "#534AB7", icon: "ti-stethoscope", title: "Plan lung follow-up",          body: "James has mild COPD. Arrange pulmonology referral before discharge." },
     ],
-    aiCaregiver: "James is on a clear upward trajectory. Coming off supplemental oxygen this morning is the biggest milestone of his stay so far. His mood has lifted noticeably — wife Ngozi's visits are clearly very beneficial and he eats much better when she's present.\n\nHis energy is still a bit low, which is normal for someone recovering from pneumonia at his age. He shouldn't be pushed to do too much, but gentle encouragement to move around is appropriate.\n\nPlan ahead for his COPD management — this admission is a good opportunity to get him connected with a pulmonologist he can see regularly after discharge.",
-    familyStatus: "getting better every day",
-    familyEmoji: "🙂",
-    familyHeadline: "James is breathing much better — a real turning point",
-    familyUpdates: [
-      { icon: "ti-wind", bg: "#E1F5EE", color: "#0F6E56", title: "He's breathing on his own again", body: "James no longer needs the extra oxygen support he came in with. His lungs are doing the work themselves now — this is a really positive sign." },
-      { icon: "ti-moon", bg: "#E1F5EE", color: "#0F6E56", title: "Best sleep of his stay", body: "He coughed much less last night and woke up saying he felt more rested. The treatment is clearly working." },
-      { icon: "ti-friends", bg: "#EEEDFE", color: "#534AB7", title: "Ngozi's visit really helped", body: "He ate more during her visit than he had all week and was in great spirits all afternoon. Visits make a real difference." },
-      { icon: "ti-home", bg: "#FAEEDA", color: "#854F0B", title: "Discharge being planned", body: "The team is working toward sending him home in the next couple of days if he keeps improving. We'll keep you updated." },
+    aiNote: "James is on a clear upward trajectory. Coming off supplemental oxygen is the biggest milestone of his stay. His mood has lifted noticeably — Ngozi's visits directly improve his appetite and engagement. Energy is still low, which is normal at this stage of pneumonia recovery. Plan ahead for COPD management at discharge.",
+    famStatus: "Getting better every day",
+    famTagline: "A real turning point — his lungs are doing the work on their own.",
+    famScore: [
+      { val: "Better", label: "Breathing" },
+      { val: "Good", label: "Mood" },
+      { val: "Good", label: "Overall" },
+    ],
+    famUpdates: [
+      { icon: "ti-wind",    bg: "#E1F5EE", c: "#0F6E56", title: "Breathing on his own",     body: "James no longer needs supplemental oxygen. His lungs are doing the work themselves — a really positive sign." },
+      { icon: "ti-moon",    bg: "#E1F5EE", c: "#0F6E56", title: "Best sleep of his stay",   body: "He coughed much less and woke up feeling more rested. The treatment is working." },
+      { icon: "ti-friends", bg: "#EEEDFE", c: "#534AB7", title: "Ngozi's visit helped a lot",body: "He ate more during her visit than he had all week and was in great spirits all afternoon." },
+      { icon: "ti-home",    bg: "#FAEEDA", c: "#854F0B", title: "Discharge being planned",  body: "The team is aiming for home within the next couple of days if progress continues." },
     ],
     contacts: [
-      { initials: "NO", name: "Ngozi Okafor", rel: "Wife (primary contact)" },
-      { initials: "TO", name: "Tunde Okafor", rel: "Son" },
+      { ini: "NO", name: "Ngozi Okafor", rel: "Wife · Primary contact" },
+      { ini: "TO", name: "Tunde Okafor", rel: "Son" },
     ],
+    famNote: "James is turning a corner. The care team is pleased with his progress and starting to plan for him going home. Ngozi's visits clearly make a huge difference — please keep them coming.",
   },
 ];
 
-let selected = 0;
-let currentView = 'caregiver';
+let sel = 0;
+let view = 'caregiver';
 
-function setView(v) {
-  currentView = v;
-  document.querySelectorAll('.vt-btn').forEach(b => b.classList.remove('active'));
-  event.target.closest('.vt-btn').classList.add('active');
-  document.getElementById('caregiver-view').classList.toggle('hidden', v !== 'caregiver');
-  document.getElementById('family-view').classList.toggle('hidden', v !== 'family');
+function setView(v, btn) {
+  view = v;
+  document.querySelectorAll('.vt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
   render();
 }
 
 function selectPerson(id) {
-  selected = id;
-  renderPills();
+  sel = id;
+  renderList();
   render();
 }
 
-function renderPills() {
-  document.getElementById('patient-row').innerHTML = people.map(p => `
-    <div class="ppill ${p.id === selected ? 'active' : ''}" onclick="selectPerson(${p.id})">
-      <div class="ppill-av" style="background:${p.avatarBg};color:${p.avatarColor};">${p.initials}</div>
-      <div>
-        <div class="ppill-name">${p.name}</div>
-        <div class="ppill-status" style="color:${p.pillStatusColor};">${p.pillStatus}</div>
+function renderList() {
+  document.getElementById('pt-list').innerHTML = people.map(p => `
+    <div class="pt-item ${p.id === sel ? 'active' : ''}" onclick="selectPerson(${p.id})">
+      <div class="pt-row1">
+        <div class="pt-av" style="background:${p.avBg};color:${p.avColor};">${p.initials}</div>
+        <div class="pt-name">${p.name}</div>
+        <div class="status-pip" style="background:${p.pipColor};"></div>
       </div>
+      <div class="pt-meta">${p.age} · ${p.room} · ${p.statusLabel}</div>
     </div>
   `).join('');
 }
 
+function render() {
+  const p = people[sel];
+  document.getElementById('view-sub').textContent = view === 'caregiver' ? 'Clinical & behavioral overview' : 'For family members & loved ones';
+  if (view === 'caregiver') renderCaregiver(p);
+  else renderFamily(p);
+}
+
 function renderCaregiver(p) {
-  document.getElementById('caregiver-view').innerHTML = `
-    <div class="grid grid-2" style="margin-bottom:12px;">
-      <div class="card hero" style="background:${p.avatarBg}20;">
-        <div class="hero-top">
-          <div class="hero-av" style="background:${p.avatarBg};color:${p.avatarColor};">${p.initials}</div>
+  document.getElementById('content').innerHTML = `
+    <div class="hero-grid">
+      <div class="card hero-card" style="background:${p.avBg}30;border-color:${p.avBg};">
+        <div class="hc-top">
+          <div class="hc-av" style="background:${p.avBg};color:${p.avColor};">${p.initials}</div>
           <div>
-            <div class="hero-name">${p.name}</div>
-            <div class="hero-sub">${p.age} years old · ${p.room}</div>
-            <div class="hero-mood" style="background:${p.mood.bg};color:${p.mood.color};">
-              ${p.mood.emoji} ${p.mood.label}
-            </div>
+            <div class="hc-name">${p.name}</div>
+            <div class="hc-sub">${p.age} · ${p.room}</div>
           </div>
         </div>
-        <div class="overall-label">Overall wellbeing today</div>
-        <div class="overall-val" style="color:${p.overallColor};">${p.overallScore}/100 — ${p.overallLabel}</div>
-        <div class="overall-desc">${p.overallDesc}</div>
+        <div class="hc-score-label">Overall wellbeing</div>
+        <div class="hc-score" style="color:${p.scoreColor};">${p.score}<span style="font-size:16px;font-weight:400;color:var(--muted);"> / 100 — ${p.scoreLabel}</span></div>
+        <div class="hc-desc">${p.tagline}</div>
       </div>
-
-      <div class="card">
-        <div class="card-title"><i class="ti ti-heart"></i> Wellbeing breakdown</div>
-        ${p.wellbeing.map(w => `
-          <div class="wb-row">
-            <div class="wb-label">${w.label}</div>
-            <div class="wb-bar-wrap"><div class="wb-bar" style="width:${w.val}%;background:${w.color};"></div></div>
-            <div class="wb-val" style="color:${w.color};">${w.val}</div>
-          </div>
-        `).join('')}
+      <div class="card card-p" style="grid-column: span 2;">
+        <div class="clabel"><i class="ti ti-heart"></i> Wellbeing</div>
+        <div class="wb">
+          ${p.wellbeing.map(w => `
+            <div class="wb-row">
+              <div class="wb-label">${w.l}</div>
+              <div class="wb-track"><div class="wb-fill" style="width:${w.v}%;background:${w.c};"></div></div>
+              <div class="wb-num" style="color:${w.c};">${w.v}</div>
+            </div>
+          `).join('')}
+        </div>
       </div>
     </div>
 
-    <div class="grid grid-4" style="margin-bottom:12px;">
+    <div class="stat-row">
       ${p.stats.map(s => `
-        <div class="stat card card-sm" style="background:${s.bg}20;border-color:${s.bg};">
-          <div class="stat-icon"><i class="ti ${s.icon}" style="color:${s.color};font-size:22px;"></i></div>
-          <div class="stat-val" style="color:${s.color};">${s.val}</div>
-          <div class="stat-label" style="color:${s.color};">${s.label}</div>
+        <div class="stat card" style="background:${s.bg}30;border-color:${s.bg};">
+          <div class="stat-icon"><i class="ti ${s.icon}" style="color:${s.c};"></i></div>
+          <div class="stat-val" style="color:${s.c};">${s.val}</div>
+          <div class="stat-label" style="color:${s.c};">${s.label}</div>
         </div>
       `).join('')}
     </div>
 
-    <div class="grid grid-2" style="margin-bottom:12px;">
-      <div class="card">
-        <div class="card-title"><i class="ti ti-calendar"></i> Today's activity</div>
-        ${p.activities.map(a => `
-          <div class="activity-item">
-            <div class="act-icon" style="background:${a.iconBg};color:${a.iconColor};"><i class="ti ${a.icon}"></i></div>
-            <div class="act-text">
-              <div class="act-title">${a.title}</div>
-              <div class="act-sub">${a.sub}</div>
-            </div>
-            <div class="act-time">${a.time}</div>
-          </div>
-        `).join('')}
-      </div>
-
-      <div>
-        <div class="card" style="margin-bottom:12px;">
-          <div class="card-title"><i class="ti ti-alert-circle"></i> What to watch today</div>
-          ${p.cgAlerts.map(a => `
-            <div class="alert-item" style="background:${a.bg}30;color:${a.color};">
-              <div class="alert-icon"><i class="ti ${a.icon}"></i></div>
-              <div>
-                <div class="alert-title">${a.title}</div>
-                <div class="alert-body">${a.body}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="card card-p">
+        <div class="clabel"><i class="ti ti-calendar"></i> Today's activity</div>
+        <div class="act-list">
+          ${p.activities.map(a => `
+            <div class="act-item">
+              <div class="act-ic" style="background:${a.iBg};color:${a.iC};"><i class="ti ${a.icon}"></i></div>
+              <div class="act-body">
+                <div class="act-title">${a.title}</div>
+                <div class="act-sub">${a.sub}</div>
               </div>
+              <div class="act-time">${a.time}</div>
             </div>
           `).join('')}
         </div>
+      </div>
 
-        <div class="card ai-box" style="background:#EEEDFE20;border-color:#EEEDFE;">
-          <div class="ai-tag" style="background:#EEEDFE;color:#3C3489;"><i class="ti ti-brain" style="font-size:12px;"></i> AI summary</div>
-          <div class="ai-text" style="color:var(--muted);">
-            ${p.aiCaregiver.split('\n\n').map(para => `<p>${para}</p>`).join('')}
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="card card-p">
+          <div class="clabel"><i class="ti ti-alert-circle"></i> Focus areas today</div>
+          <div class="alert-list">
+            ${p.alerts.map(a => `
+              <div class="al" style="background:${a.bg}40;color:${a.c};">
+                <div class="al-ic"><i class="ti ${a.icon}"></i></div>
+                <div>
+                  <div class="al-title">${a.title}</div>
+                  <div class="al-body">${a.body}</div>
+                </div>
+              </div>
+            `).join('')}
           </div>
+        </div>
+        <div class="ai-note">
+          <div class="ai-note-tag"><i class="ti ti-brain" style="font-size:12px;"></i> AI summary</div>
+          <div class="ai-note-text">${p.aiNote}</div>
         </div>
       </div>
     </div>
@@ -478,63 +500,61 @@ function renderCaregiver(p) {
 }
 
 function renderFamily(p) {
-  document.getElementById('family-view').innerHTML = `
-    <div class="grid grid-2" style="margin-bottom:12px;">
-      <div class="card">
-        <div class="fam-feeling">
-          <div class="fam-emoji">${p.familyEmoji}</div>
-          <div class="fam-status-text">${p.name.split(' ')[0]} is ${p.familyStatus}</div>
-          <div class="fam-status-sub">${p.overallDesc}</div>
+  document.getElementById('content').innerHTML = `
+    <div class="fam-grid">
+      <div class="card fam-hero" style="background:${p.avBg}25;border-color:${p.avBg};">
+        <div class="hc-av" style="background:${p.avBg};color:${p.avColor};width:52px;height:52px;font-size:18px;margin:0 auto 14px;">${p.initials}</div>
+        <div class="fam-status">${p.famStatus}</div>
+        <div class="fam-tagline">${p.famTagline}</div>
+        <div class="fam-score-row">
+          ${p.famScore.map(s => `
+            <div class="fam-score-item">
+              <div class="fam-score-val" style="color:${p.scoreColor};">${s.val}</div>
+              <div class="fam-score-label">${s.label}</div>
+            </div>
+          `).join('')}
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-title"><i class="ti ti-sparkles"></i> Today's highlights for family</div>
-        ${p.familyUpdates.map(u => `
-          <div class="update-card" style="background:${u.bg}25;border-left:3px solid ${u.color};border-radius:0 var(--radius-md) var(--radius-md) 0;padding:12px 14px;margin-bottom:9px;">
-            <div class="update-icon-row" style="color:${u.color};"><i class="ti ${u.icon}"></i> ${u.title}</div>
-            <div class="update-body" style="color:var(--muted);">${u.body}</div>
-          </div>
-        `).join('')}
+      <div class="card card-p">
+        <div class="clabel"><i class="ti ti-sparkles"></i> Today's updates</div>
+        <div class="update-list">
+          ${p.famUpdates.map(u => `
+            <div class="upd" style="background:${u.bg}30;border-left:2.5px solid ${u.c};border-radius:0 var(--r-md) var(--r-md) 0;padding:12px 14px;">
+              <div class="upd-title" style="color:${u.c};"><i class="ti ${u.icon}" style="font-size:14px;"></i>${u.title}</div>
+              <div class="upd-body" style="color:var(--muted);">${u.body}</div>
+            </div>
+          `).join('')}
+        </div>
       </div>
     </div>
 
-    <div class="grid grid-2">
-      <div class="card">
-        <div class="card-title"><i class="ti ti-users"></i> Family contacts on file</div>
-        ${p.contacts.map(c => `
-          <div class="contact-row">
-            <div class="contact-av">${c.initials}</div>
-            <div>
-              <div class="contact-name">${c.name}</div>
-              <div class="contact-rel">${c.rel}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="card card-p">
+        <div class="clabel"><i class="ti ti-users"></i> Family contacts</div>
+        <div class="contact-list">
+          ${p.contacts.map(c => `
+            <div class="ct-row">
+              <div class="ct-av">${c.ini}</div>
+              <div>
+                <div class="ct-name">${c.name}</div>
+                <div class="ct-rel">${c.rel}</div>
+              </div>
+              <button class="ct-btn">Message care team</button>
             </div>
-            <button class="contact-btn">Message care team</button>
-          </div>
-        `).join('')}
-        <div style="margin-top:14px;font-size:12px;color:var(--muted);line-height:1.6;padding:10px 12px;background:var(--bg);border-radius:var(--radius-md);">
-          <i class="ti ti-info-circle" style="font-size:13px;margin-right:4px;"></i>
-          Updates are refreshed throughout the day. For urgent concerns, please contact the ward directly.
+          `).join('')}
         </div>
       </div>
 
-      <div class="card ai-box" style="background:#E1F5EE20;border-color:#9FE1CB;">
-        <div class="ai-tag" style="background:#E1F5EE;color:#0F6E56;"><i class="ti ti-message-circle" style="font-size:12px;"></i> Note from the care team</div>
-        <div class="ai-text" style="color:var(--muted);">
-          ${p.aiCaregiver.split('\n\n').map(para => `<p>${para}</p>`).join('')}
-        </div>
+      <div class="ai-note" style="border-radius:var(--r-lg);background:#E1F5EE40;border-left:3px solid #1D9E75;border-color:#9FE1CB;">
+        <div class="ai-note-tag" style="color:#0F6E56;"><i class="ti ti-message-circle" style="font-size:12px;"></i> Note from the care team</div>
+        <div class="ai-note-text" style="color:#085041;">${p.famNote}</div>
       </div>
     </div>
   `;
 }
 
-function render() {
-  const p = people[selected];
-  if (currentView === 'caregiver') renderCaregiver(p);
-  else renderFamily(p);
-}
-
-renderPills();
+renderList();
 render();
 </script>
 </body>
